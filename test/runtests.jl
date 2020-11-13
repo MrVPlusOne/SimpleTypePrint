@@ -15,8 +15,8 @@ module A
     end
 end
 @testset "type simple print" begin
-    @test repr_type(Array{Int, 2}) == "Array{Int64,2}"
-    @test repr_type(Array{Int}) == "Array{Int64,N} where N"
+    @test repr_type(Array{Int64, 2}) == "Array{Int64,2}"
+    @test repr_type(Array{Int64}) == "Array{Int64,N} where N"
     @test repr_type(Tuple{A,B,C} where {A, B, C}) == "Tuple{A,B,C} where {A,B,C}"
     let nested = Tuple{Tuple{Tuple{A,B},C},D} where {A,B,C,D}
         expected = [
@@ -37,7 +37,7 @@ end
     @test endswith(repr_type(A.B.Foo; short_type_name=false), "A.B.Foo{A} where A")
     @test (repr_type(Tuple{A,B,C} where {A, B >: A, A<:C<:B}) 
             == "Tuple{A,B,C} where {A,B>:A,A<:C<:B}")
-    @test (repr_type(Tuple{A} where {A <: Tuple{Tuple{Tuple{Int}}}}, max_depth=3)
+    @test (repr_type(Tuple{A} where {A <: Tuple{Tuple{Tuple{Int64}}}}, max_depth=3)
             == "Tuple{A} where A<:Tuple{Tuple{...}}")
 
     @test (repr_type(Tuple{(Tuple{A} where A), A} where A) 
