@@ -14,6 +14,11 @@ module A
         struct Foo{A} end
     end
 end
+
+macro type_print_test(ty, result) 
+    esc(:(@test repr_type($ty) == $result))
+end
+
 @testset "type simple print" begin
     @test repr_type(Array{Int64, 2}) == "Array{Int64,2}"
     @test repr_type(Array{Int64}) == "Array{Int64,N} where N"
@@ -40,8 +45,14 @@ end
     @test (repr_type(Tuple{A} where {A <: Tuple{Tuple{Tuple{Int64}}}}, max_depth=3)
             == "Tuple{A} where A<:Tuple{Tuple{...}}")
 
-    @test (repr_type(Tuple{(Tuple{A} where A), A} where A) 
-            == "Tuple{Tuple{A1} where A1,A} where A")
+    @type_print_test(Tuple{(Tuple{A} where A), A} where A, 
+        "Tuple{Tuple{A1} where A1,A} where A")
+    @type_print_test(Union{A, B} where {A, B}, "Union{A,B} where {A,B}")
+    @type_print_test(StridedArray{T,N} where {T, N}, "StridedArray{T,N} where {T,N}")
+    @type_print_test(StridedVecOrMat{String}, "StridedVecOrMat{String}")
+
+    @type_print_test NTuple{2, Int64} "Tuple{Int64,Int64}"
+    @type_print_test NTuple{5, Int64} "NTuple{5,Int64}"
 end
 
 end  # module TestSimpleTypePrint

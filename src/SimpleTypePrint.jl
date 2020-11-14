@@ -5,7 +5,8 @@ export show_type, repr_type, config_type_display
 """
 # Examples
 ```jldoctest
-julia> print_multiple(show, stdout, 1:10, "{", ",", "}")
+julia> using SimpleTypePrint: print_multiple
+       print_multiple(show, stdout, 1:10, "{", ",", "}")
 {1,2,3,4,5,6,7,8,9,10}
 ```
 """
@@ -33,9 +34,17 @@ function show_type(io::IO, @nospecialize(ty::Type); max_depth::Int = 3, short_ty
     t_var_scope::Set{Symbol} = Set{Symbol}()
 
     function rec(x::DataType, d)
-        if x === Tuple
-            # to be consistent with the Julia Compiler.
-            return Base.show_type_name(io, x.name)  
+        # to be consistent with the Julia Compiler.
+        (x === Tuple) && return Base.show_type_name(io, x.name)
+        if x.name === Tuple.name
+            n = length(x.parameters)::Int
+            if n > 3 && all(i -> (x.parameters[1] === i), x.parameters)
+                # Print homogeneous tuples with more than 3 elements compactly as NTuple
+                print(io, "NTuple{", n, ',') 
+                rec(x.parameters[1], d-1) 
+                print(io, "}")
+                return
+            end
         end
 
         short_type_name ? print(io, nameof(x)) : Base.show_type_name(io, x.name)
@@ -49,6 +58,25 @@ function show_type(io::IO, @nospecialize(ty::Type); max_depth::Int = 3, short_ty
     end
 
     function rec(x::Union, d)
+        if x.a isa DataType && Core.Compiler.typename(x.a) === Core.Compiler.typename(DenseArray)
+            T, N = x.a.parameters
+            if x == StridedArray{T,N}
+                print(io, "StridedArray")
+                print_multiple(show, io, (T,N))
+                return
+            elseif x == StridedVecOrMat{T}
+                print(io, "StridedVecOrMat")
+                print_multiple(show, io, (T,))
+                return
+            elseif StridedArray{T,N} <: x
+                print(io, "Union")
+                elems = vcat(StridedArray{T,N}, 
+                    Base.uniontypes(Core.Compiler.typesubtract(x, StridedArray{T,N})))
+                print_multiple((_, p) -> rec(p, d-1), io, elems)
+                return
+            end
+        end
+        print(io, "Union")
         print_multiple((_, p) -> rec(p, d-1), io, Base.uniontypes(x))
     end
 
