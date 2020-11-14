@@ -47,7 +47,7 @@ end
 
     @type_print_test(Tuple{(Tuple{A} where A), A} where A, 
         "Tuple{Tuple{A1} where A1,A} where A")
-    @type_print_test(Union{A, B} where {A, B}, "Union{A,B} where {A,B}")
+    
     @type_print_test(StridedArray{T,N} where {T, N}, "StridedArray{T,N} where {T,N}")
     @type_print_test(StridedVecOrMat{String}, "StridedVecOrMat{String}")
 
