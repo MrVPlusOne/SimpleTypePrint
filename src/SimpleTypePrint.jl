@@ -22,13 +22,6 @@ end
 
 """
     show_type(io, type; kwargs...)
-
-# Keyword args
-- `max_depth=3`: the maximal type AST depth to show. Type arguments deeper than this value
-will be printed as `...`.
-- `short_type_name=true`: when set to `true`, will print simple type names without their 
-corresponding module path. e.g. "Name" instead of "ModuleA.ModuleB.Name". Note that the 
-shorter name will always be used if the type is visible from the current scope. 
 """
 function show_type(io::IO, @nospecialize(ty::Type); max_depth::Int = 3, short_type_name::Bool = true)
     t_var_scope::Set{Symbol} = Set{Symbol}()
@@ -155,16 +148,31 @@ function show_type(io::IO, @nospecialize(ty::Type); max_depth::Int = 3, short_ty
     rec(ty, max_depth)
 end
 
+"""
+    repr_type(ty::Type; kwargs...)::String
+"""
 repr_type(ty::Type; kwargs...) = sprint((io,t) -> show_type(io,t; kwargs...), ty)
 
 """
-    display_simple_types(;kwargs...)
+    config_type_display(;kwargs...)
 
 Replace `Base.show(io::IO, x::Type)` with the simpler type printing funciton 
-`show_type`. See `show_type` for details about the available `kwargs`.
+`show_type`. 
+
+See also: `show_type`, `repr_type`.
 """
 function config_type_display(;kwargs...)
     @eval Base.show(io::IO, x::Type) = show_type(io, x; $(kwargs)...)
 end
+
+"""
+# Keyword args
+- `max_depth=3`: the maximal type AST depth to show. Type arguments deeper than this value
+will be printed as `...`.
+- `short_type_name=true`: when set to `true`, will print simple type names without their 
+corresponding module path. e.g. "Name" instead of "ModuleA.ModuleB.Name". Note that the 
+shorter name will always be used if the type is visible from the current scope. 
+"""
+show_type, repr_type, config_type_display
 
 end  # module SimpleTypePrint
