@@ -4,7 +4,7 @@ if isdefined(@__MODULE__, :LanguageServer)  # hack to make vscode linter work pr
     include("../src/SimpleTypePrint.jl")
     using .SimpleTypePrint
 else
-    using SimpleTypePrint
+    using SimpleTypePrint: repr_type
 end
 
 using Test
@@ -12,6 +12,8 @@ using Test
 module A
     module B
         struct Foo{A} end
+
+        f(x) = x
     end
 end
 
@@ -47,12 +49,19 @@ end
 
     @type_print_test(Tuple{(Tuple{A} where A), A} where A, 
         "Tuple{Tuple{A1} where A1,A} where A")
+
+    union_s = repr_type(Union{A,B} where {A,B})
+    @test union_s ∈ ["Union{A,B} where {A,B}", "Union{B,A} where {A,B}"]
     
     @type_print_test(StridedArray{T,N} where {T, N}, "StridedArray{T,N} where {T,N}")
     @type_print_test(StridedVecOrMat{String}, "StridedVecOrMat{String}")
 
     @type_print_test NTuple{2, Int64} "Tuple{Int64,Int64}"
     @type_print_test NTuple{5, Int64} "NTuple{5,Int64}"
+
+
+    f_repr = repr_type(typeof(A.B.f))
+    @test startswith(f_repr, "typeof(") && endswith(f_repr, "A.B.f)")
 end
 
 end  # module TestSimpleTypePrint

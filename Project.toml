@@ -1,7 +1,7 @@
 name = "SimpleTypePrint"
 uuid = "01919df6-f63c-417e-aa23-898e227d26ec"
 authors = ["Jiayi Wei <wjydzh1@gmail.com> and contributors"]
-version = "0.1.1"
+version = "0.1.2"
 
 [compat]
 julia = "1"

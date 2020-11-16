@@ -40,7 +40,14 @@ function show_type(io::IO, @nospecialize(ty::Type); max_depth::Int = 3, short_ty
             end
         end
 
-        short_type_name ? print(io, nameof(x)) : Base.show_type_name(io, x.name)
+        # hanlde function type specially
+        is_func = startswith(string(nameof(x)), "#")
+        if short_type_name && !is_func
+             print(io, nameof(x))
+        else 
+            Base.show_type_name(io, x.name)
+        end
+
         if !isempty(x.parameters)
             if d ≤ 1
                 print(io, "{...}")
