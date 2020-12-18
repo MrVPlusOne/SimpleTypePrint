@@ -28,30 +28,27 @@ If you prefer not to override the Julia default, you can instead use the provide
 
 ## Changes compared to `Base.show`
 
- - Merging nested where clauses
- ```julia
-julia> using SimpleTypePrint: repr_type
+### Merging nested where clauses
+By default, Julia display multiple where clauses separately, whereas in SimpleTypePrint, where clauses are correctly merged, just like how you would write them.
 
-julia> repr(Tuple{A,B,C} where {A, B, C})
-"Tuple{A,B,C} where C where B where A"  # By default, Julia display multiple where clauses separately
+|                 |                                        |
+|-----------------|----------------------------------------|
+| Input           | `Tuple{A,B,C} where {A, B, C}`         |
+| Base.show       | `Tuple{A,B,C} where C where B where A` |
+| SimpleTypePrint | `Tuple{A,B,C} where {A,B,C}`           |
 
-julia> repr_type(Tuple{A,B,C} where {A, B, C})
-"Tuple{A,B,C} where {A,B,C}"  # Where clauses are correctly merged, just like how you would write them
- ```
+### Displaying deeply nested parts as ellipsis
+The default max display depth is 3, but you can change this value using the `max_depth` keyword argument. 
 
- - Displaying deep parts as ellipsis
- ```julia
-julia> repr_type(Tuple{Tuple{Tuple{A,B},C},D} where {A,B,C,D})
-"Tuple{Tuple{Tuple{...},C},D} where {A,B,C,D}"  # By default, the maximal display depth is 3
+|                 |                                        |
+|-----------------|----------------------------------------|
+| Input           | `Tuple{Tuple{Tuple{A,B},C},D} where {A,B,C,D}` |
+| Base.show       | `Tuple{Tuple{Tuple{A,B},C},D} where D where C where B where A` |
+| SimpleTypePrint(max_depth=3) | `Tuple{Tuple{Tuple{...},C},D} where {A,B,C,D}`           |
 
-julia> repr_type(Tuple{Tuple{Tuple{A,B},C},D} where {A,B,C,D}; max_depth=5)
-"Tuple{Tuple{Tuple{A,B},C},D} where {A,B,C,D}"  # You can always increase `max_depth` as needed
- 
- julia> repr_type(Tuple{A} where {A <: Tuple{Tuple{Tuple{Int}}}})
-"Tuple{A} where A<:Tuple{Tuple{...}}"  # depth limit also applies to type constraints
- ```
+### Displaying type names without module prefixes
+By default, Julia displays module prefixes unless the type is directly visible from the current scope. SimpleTypePrint allows you to opt-out from this behavior.
 
-- Displaying type names without module prefixes
 ```julia
 julia> module A
            module B
@@ -59,20 +56,21 @@ julia> module A
            end
        end  # Foo is nested inside A and B.
 Main.A
-
-julia> repr(A.B.Foo)
-"Main.A.B.Foo"  # By default, Julia displays with module prefixes unless the type is directly visible from the current scope
-
-julia> repr_type(A.B.Foo; short_type_name=true)
-"Foo{A} where A"
 ```
 
-- Renaming type variables with conflicting names
-```julia
-julia> repr(Tuple{(Tuple{A} where A), A} where A)
-"Tuple{Tuple{A} where A,A} where A"
+|                 |                                        |
+|-----------------|----------------------------------------|
+| Input           | `A.B.Foo` |
+| Base.show       | `Main.A.B.Foo` |
+| SimpleTypePrint(short_type_name=true) | `Foo{A} where A`           |
 
-julia> repr_type(Tuple{(Tuple{A} where A), A} where A)
-"Tuple{Tuple{A1} where A1,A} where A"
-```
+
+### Renaming type variables with conflicting names
+
+|                 |                                        |
+|-----------------|----------------------------------------|
+| Input           | `Tuple{(Tuple{A} where A), A} where A` |
+| Base.show       | `Tuple{Tuple{A} where A,A} where A` |
+| SimpleTypePrint | `Tuple{Tuple{A1} where A1,A} where A`           |
+
 
